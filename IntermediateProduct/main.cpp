@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
+#include <iostream>
 
 #define LEVEL_MAX 255
 
@@ -93,8 +94,18 @@ void MaskToColorImage(const Image mask, ColorImage img)
 
 int main()
 {
-    ColorImage img = InitColorImage(D, D);
-    Image mask = InitImage(D, D);
+    int width, height;
+    std::cout << "画像の幅を指定してください" << std::endl;
+    std::cin >> width;
+    std::cout << "画像の高さを指定してください" << std::endl;
+    std::cin >> height;
+
+    double magnification;
+    std::cout << "拡大率を指定してください" << std::endl;
+    std::cin >> magnification;
+
+    ColorImage img = InitColorImage(width, height);
+    Image mask = InitImage(width, height);
 
     if (img.Nx == 0 || mask.Nx == 0) {
         printf("メモリ確保エラー\n");
@@ -104,12 +115,12 @@ int main()
     // ジュリア集合の描画
     Complex c = { -0.8, 0.156 };
 
-    int center_x = D / 2;
-    int center_y = D / 2;
+    int center_x = width / 2;
+    int center_y = height / 2;
 
-    for (int y = 0; y < D; y++) {
-        for (int x = 0; x < D; x++) {
-			Complex z = { (double)(x - center_x) / (D * ZOOM), (double)(y - center_y) / (D * ZOOM)};
+    for (int y = 0; y < height; y++) {
+        for (int x = 0; x < width; x++) {
+			Complex z = { (double)(x - center_x) / (height * magnification), (double)(y - center_y) / (height * magnification)};
 			int n;
             for (n = 0; n < N; n++) {
                 z = ComplexAdd(ComplexMul(z, z), c);
@@ -117,11 +128,12 @@ int main()
                 if (z.re * z.re + z.im * z.im > 4.0) break;
 			}
             double t = (double)n / N;
+            if(t > 1.0) t = 1.0;
 
             // 0.6乗することで、明るい部分を強調
             int R = LEVEL_MAX * pow(t, 0.6);
 
-            mask.Data[y * D + x] = R;
+            mask.Data[x * height + y] = R;
 
 		}
 	}
@@ -136,10 +148,10 @@ int main()
 
     // グラデーションの作成
     ColorSetAll(img, 0, 0, 0);
-    for (int y = 0; y < D; y++) {
-        for (int x = 0; x < D; x++) {
-			img.DataR[y * D + x] = 255 * (2 * D - y - x) / (2 * D);
-            img.DataB[y * D + x] = 255 * (y + x) / (2 * D);
+    for (int y = 0; y < height; y++) {
+        for (int x = 0; x < width; x++) {
+			img.DataR[x * height + y] = 255 * (width + height - y - x) / (width + height);
+            img.DataB[x * height + y] = 255 * (y + x) / (width + height);
 		}
 	}
 
